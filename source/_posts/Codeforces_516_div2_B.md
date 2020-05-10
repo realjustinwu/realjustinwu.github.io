@@ -1,5 +1,5 @@
 ---
-title: "Codeforces 516 Dev2 B: Equations of Mathematical Magic"
+title: "Codeforces 516 Div2 B: Equations of Mathematical Magic"
 date: 2018-10-25 20:20:07
 categories: Algorithm
 tags: [Algorithm, Codeforces]

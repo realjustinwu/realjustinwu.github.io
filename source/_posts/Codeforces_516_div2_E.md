@@ -1,5 +1,5 @@
 ---
-title: "Codeforces #516 dev2 E: Dwarves, Hats and Extrasensory Abilities"
+title: "Codeforces #516 div2 E: Dwarves, Hats and Extrasensory Abilities"
 date: 2018-10-25 22:04:41
 categories: Algorithm
 tags: [Algorithm, Codeforces]

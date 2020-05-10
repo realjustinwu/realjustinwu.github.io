@@ -1,5 +1,5 @@
 ---
-title: "Codeforces #516 dev2 D: Labyrinth"
+title: "Codeforces #516 div2 D: Labyrinth"
 date: 2018-10-25 21:23:03
 categories: Algorithm
 tags: [Algorithm, Codeforces]

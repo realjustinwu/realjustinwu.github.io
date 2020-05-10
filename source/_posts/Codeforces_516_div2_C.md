@@ -1,5 +1,5 @@
 ---
-title: "Codeforces #516 dev2 C: Oh Those Palindromes"
+title: "Codeforces #516 div2 C: Oh Those Palindromes"
 date: 2018-10-25 21:09:01
 categories: Algorithm
 tags: [Algorithm, Codeforces]
