@@ -11,6 +11,8 @@ categories: Algorithm
 
 有一种 "round" 类型的数据，格式是 d000，给一个数字n，计算 n 是由多少个 "round" 数字相加得到的
 
+<!-- more -->
+
 ## 代码
 
 ```cpp

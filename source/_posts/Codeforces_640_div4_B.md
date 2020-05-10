@@ -13,6 +13,8 @@ categories: Algorithm
 
 ## 题解
 
+<!-- more -->
+
 判断 k 和 n 的奇偶性，分4种情况考虑。
 
 1. k>n 时：无解
