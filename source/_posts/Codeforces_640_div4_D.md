@@ -13,6 +13,8 @@ categories: Algorithm
 
 ## 题解
 
+<!-- more -->
+
 模拟
 
 ## 代码
