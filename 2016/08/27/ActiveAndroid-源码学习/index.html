@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/apple-touch-icon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.realjustinwu.com').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="分类 greenDAO 使用工具生成代码，效率高，减少编写重复的代码 ActiveAndroid、LitePal 使用反射创建代码，效率比较低，接口灵活">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ActiveAndroid 源码学习">
+<meta property="og:url" content="https://www.realjustinwu.com/2016/08/27/ActiveAndroid-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Justin Wu&#39;s Blog">
+<meta property="og:description" content="分类 greenDAO 使用工具生成代码，效率高，减少编写重复的代码 ActiveAndroid、LitePal 使用反射创建代码，效率比较低，接口灵活">
+<meta property="og:image" content="https://www.realjustinwu.com/images/active-android-state-flow.png">
+<meta property="article:published_time" content="2016-08-27T03:03:40.000Z">
+<meta property="article:modified_time" content="2019-03-07T15:01:19.708Z">
+<meta property="article:author" content="Justin Wu">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="ActiveAndroid">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.realjustinwu.com/images/active-android-state-flow.png">
+
+<link rel="canonical" href="https://www.realjustinwu.com/2016/08/27/ActiveAndroid-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>ActiveAndroid 源码学习 | Justin Wu's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=220467495"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '220467495');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?df85d5b121021219fb61449321f1526b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Justin Wu's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section">Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section">Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section">Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section">Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section">About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www.realjustinwu.com/2016/08/27/ActiveAndroid-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Justin Wu">
+      <meta itemprop="description" content="人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Justin Wu's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          ActiveAndroid 源码学习
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-08-27 11:03:40" itemprop="dateCreated datePublished" datetime="2016-08-27T11:03:40+08:00">2016-08-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">源码阅读</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><ul>
+<li>greenDAO 使用工具生成代码，效率高，减少编写重复的代码</li>
+<li>ActiveAndroid、LitePal 使用反射创建代码，效率比较低，接口灵活</li>
+</ul>
+<a id="more"></a>
+<h2 id="主要类"><a href="#主要类" class="headerlink" title="主要类"></a>主要类</h2><h3 id="Configuration"><a href="#Configuration" class="headerlink" title="Configuration"></a>Configuration</h3><p>配置文件包括</p>
+<ol>
+<li>context: 上下文，使用 ApplicationContext, 会被强引用</li>
+<li>DatabaseName: Manifast.xml 中配置(“AA_DB_NAME”)或者默认 “Application.db”</li>
+<li>DatabaseVersion: 默认为1</li>
+<li>SqlParser: 语法分析程序，默认 “legacy”</li>
+<li>mModelClasses: 存储对象类型，Manifast.xml 中配置(“AA_MODELS”)，默认全局查找所有类，效率低</li>
+<li>mTypeSerializers: 类型转化工具类，默认支持 Calendar, File, SqlDate, Date。 可以自定义存储的转化，实现TypeSerializer接口，在 Manifast.xml 中配置(“AA_SERIALIZERS”)</li>
+</ol>
+<h3 id="Cache"><a href="#Cache" class="headerlink" title="Cache"></a>Cache</h3><ol>
+<li>使用 LRU cache 存储 Java 实体对象，键为 <code>{TableName}@{id}</code>，默认大小 1024</li>
+<li>通过类对象(? extends Model)，获取表信息</li>
+<li>通过类对象，获取存储转化工具类</li>
+<li>通过类对象获取表名</li>
+<li>通过类名和ID 获取、添加、删除存储的实体对象</li>
+<li>获取数据库，打开、关闭数据库</li>
+</ol>
+<h3 id="DataBaseHelper"><a href="#DataBaseHelper" class="headerlink" title="DataBaseHelper"></a>DataBaseHelper</h3><ol>
+<li>继承自 SQLiteOpenHelper</li>
+<li>如果数据库不存在，并且 Asserts 目录下有 dataBaseName.db 的文件，会复制到手机上</li>
+<li>创建数据表的功能：把所有的子 Model 转成创建表sql，并创建数据表</li>
+<li>获取 asserts/migrations 下的所有文件，按照升序排序，执行 (old, current] 版本的sql文件，如: 1.sql, 2.sql</li>
+</ol>
+<h3 id="Model"><a href="#Model" class="headerlink" title="Model"></a>Model</h3><ol>
+<li>不能覆盖 getId() 方法，这是作为 key 使用的</li>
+<li>delete(): 用sql从数据库中删除，从cache移除，发送 ContentProvider 通知数据已经变化</li>
+<li>save(): 反射获取所有字段的名或者<code>@Column</code>定义的值和对应的值，如果mId 为空则 insert 到数据库，发送 ContentProvider 通知数据已经变化</li>
+<li>loadFromCursor(): 将数据库中获得的 cursor 使用反射解析成 Java 对象，并且存入到 Cache 中，如果有关联的对象，一并获取出来，</li>
+<li>getMany(): </li>
+</ol>
+<p>静态方法：</p>
+<ol>
+<li><code>Model.delete(Class&lt;? extends Model&gt; type, long id)</code> 删除数据</li>
+<li><code>Model.load(Class&lt;? extends Model&gt; type, long id)</code> 查询数据</li>
+</ol>
+<h3 id="ModelInfo"><a href="#ModelInfo" class="headerlink" title="ModelInfo"></a>ModelInfo</h3><ol>
+<li>mTableInfos 存放所有的 Model 信息，如果没有在 Manifast.xml 中配置，会遍历所有的类对象查找 Model 的子类</li>
+<li>mTypeSerializers 支持的存储类型，如果没有在 Manifast.xml 中配置，才会遍历搜索</li>
+</ol>
+<h3 id="TableInfo"><a href="#TableInfo" class="headerlink" title="TableInfo"></a>TableInfo</h3><ol>
+<li>跟 Model 一一对应</li>
+<li>对传入的 Model类，会解析其中的 <code>@Table()</code>,<code>@Column</code>，包括子类的属性。得到&lt;属性,表字段&gt; 的键值对</li>
+</ol>
+<h3 id="ContentProvider"><a href="#ContentProvider" class="headerlink" title="ContentProvider"></a>ContentProvider</h3><p>ContentProvider: 是一个内容提供者，类似于网站，为外界提供数据。数据的存储可以是 SP，数据库，文件等，可以跨运用</p>
+<p>Uri: <code>Uri.parse(&quot;content://&lt;authority&gt;/&lt;table&gt;&quot;)</code></p>
+<p>在 onCreate 中初始化 ActiveAndroid，包括初始化 Cache</p>
+<p>URI_MATCHER &amp; TYPE_CODES: 通过 uri 在 URI_MATCHER 获取 key, 再用 key 获取 TYPE_CODES 中的 Model 类对象</p>
+<p>getType(): 与 Intent 的 Category 有关，返回类似 <code>vnd.com.binwin20.xxx.item/vnd.com.binwin20.TableName</code></p>
+<p>insert,query,delete,update 都是调用 Cache 处理数据。处理完之后，发送 notifyChange</p>
+<h3 id="query-指令"><a href="#query-指令" class="headerlink" title="query 指令"></a>query 指令</h3><p>使用状态机，使用 Delete, From, Join, Select, Set, Update 类，拼接成一个 Sql 字符串。<br>然后调用 SqlUtils -&gt; Cache 执行 Sql 语句。</p>
+<img src="/images/active-android-state-flow.png">
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_wechat_pay.png" alt="Justin Wu WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_alipay.png" alt="Justin Wu Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/ActiveAndroid/" rel="tag"># ActiveAndroid</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/26/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/" rel="prev" title="博客搭建">
+      <i class="fa fa-chevron-left"></i> 博客搭建
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/08/27/Hexo-%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E8%B8%A9%E5%9D%91/" rel="next" title="Hexo 图片上传踩坑">
+      Hexo 图片上传踩坑 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8yOTYzOS82MjA3"></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#分类"><span class="nav-number">1.</span> <span class="nav-text">分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主要类"><span class="nav-number">2.</span> <span class="nav-text">主要类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Configuration"><span class="nav-number">2.1.</span> <span class="nav-text">Configuration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cache"><span class="nav-number">2.2.</span> <span class="nav-text">Cache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DataBaseHelper"><span class="nav-number">2.3.</span> <span class="nav-text">DataBaseHelper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model"><span class="nav-number">2.4.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ModelInfo"><span class="nav-number">2.5.</span> <span class="nav-text">ModelInfo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TableInfo"><span class="nav-number">2.6.</span> <span class="nav-text">TableInfo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ContentProvider"><span class="nav-number">2.7.</span> <span class="nav-text">ContentProvider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#query-指令"><span class="nav-number">2.8.</span> <span class="nav-text">query 指令</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Justin Wu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Justin Wu</p>
+  <div class="site-description" itemprop="description">人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/binwin20" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;binwin20" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Friends
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.longmenwaideyu.com/" title="http:&#x2F;&#x2F;www.longmenwaideyu.com" rel="noopener" target="_blank">龙门外的鱼</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.csdn.net/binwin20" title="http:&#x2F;&#x2F;blog.csdn.net&#x2F;binwin20" rel="noopener" target="_blank">我的 CSDN</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Justin Wu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

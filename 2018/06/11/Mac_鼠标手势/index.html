@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/apple-touch-icon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.realjustinwu.com').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="用习惯了苹果触摸板之后，换成外接键盘和鼠标之后，感觉鼠标真是太难用了。尤其是习惯了三个手指切换工作空间，鼠标根本没法完成这个快捷方式（苹果鼠标可以切换工作空间，但是 ds 我买不起）。 Google 之后发现，除了三个手指之外，还可以用快捷键切换工作空间的，control + → 切换到右侧工作空间 control + ← 切换到左侧工作空间。之前设置电脑的时候，习惯了三个手指，觉得这个快捷方式没">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mac 鼠标手势">
+<meta property="og:url" content="https://www.realjustinwu.com/2018/06/11/Mac_%E9%BC%A0%E6%A0%87%E6%89%8B%E5%8A%BF/index.html">
+<meta property="og:site_name" content="Justin Wu&#39;s Blog">
+<meta property="og:description" content="用习惯了苹果触摸板之后，换成外接键盘和鼠标之后，感觉鼠标真是太难用了。尤其是习惯了三个手指切换工作空间，鼠标根本没法完成这个快捷方式（苹果鼠标可以切换工作空间，但是 ds 我买不起）。 Google 之后发现，除了三个手指之外，还可以用快捷键切换工作空间的，control + → 切换到右侧工作空间 control + ← 切换到左侧工作空间。之前设置电脑的时候，习惯了三个手指，觉得这个快捷方式没">
+<meta property="article:published_time" content="2018-06-11T12:48:26.000Z">
+<meta property="article:modified_time" content="2019-03-07T15:01:19.784Z">
+<meta property="article:author" content="Justin Wu">
+<meta property="article:tag" content="mac">
+<meta property="article:tag" content="apple script">
+<meta property="article:tag" content="xGestures">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.realjustinwu.com/2018/06/11/Mac_%E9%BC%A0%E6%A0%87%E6%89%8B%E5%8A%BF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Mac 鼠标手势 | Justin Wu's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=220467495"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '220467495');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?df85d5b121021219fb61449321f1526b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Justin Wu's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section">Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section">Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section">Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section">Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section">About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www.realjustinwu.com/2018/06/11/Mac_%E9%BC%A0%E6%A0%87%E6%89%8B%E5%8A%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Justin Wu">
+      <meta itemprop="description" content="人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Justin Wu's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Mac 鼠标手势
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-06-11 20:48:26" itemprop="dateCreated datePublished" datetime="2018-06-11T20:48:26+08:00">2018-06-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B0%8F%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index">
+                    <span itemprop="name">小工具</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>用习惯了苹果触摸板之后，换成外接键盘和鼠标之后，感觉鼠标真是太难用了。尤其是习惯了三个手指切换工作空间，鼠标根本没法完成这个快捷方式（苹果鼠标可以切换工作空间，但是 ds 我买不起）。</p>
+<p>Google 之后发现，除了三个手指之外，还可以用快捷键切换工作空间的，<code>control + →</code> 切换到右侧工作空间 <code>control + ←</code> 切换到左侧工作空间。之前设置电脑的时候，习惯了三个手指，觉得这个快捷方式没用于是把它禁掉了。在设置中把快捷键勾上后，总算可以不用触摸板就能切换工作空间了。</p>
+<p>用了半天之后发现，这种快捷方式不够顺手。如果能把鼠标滚轮的两侧按钮使用上就完美了，摁向左边，切换到左侧工作空间，摁向右边，切换到右侧工作空间。但是没找到我的鼠标的管理软件。然后继续 google，终于找到一个好用的东西 <a href="http://briankendall.net/xGestures/download.htm" target="_blank" rel="noopener">xGestures</a></p>
+<p><a href="http://briankendall.net/xGestures/download.htm" target="_blank" rel="noopener">xGestures</a> 之前要钱的，现在免费了，感谢作者 Brian Kendall。</p>
+<p>使用 xGestures 可以设置各种自定义的鼠标手势，来执行常用操作和非常用操作。其中有一个特别有用的功能，就是可以运行一个 apple script。apple script 是 Mac 上的脚本语言，可以用来执行各种操作。我这里切换工作空间就是使用 apple script 完成的。下面进入正题：</p>
+<a id="more"></a>
+<h2 id="安装-xGestures"><a href="#安装-xGestures" class="headerlink" title="安装 xGestures"></a>安装 xGestures</h2><p>从 <a href="http://briankendall.net/xGestures/download.htm" target="_blank" rel="noopener">http://briankendall.net/xGestures/download.htm</a> 下载 xGestures，下载完成之后，双击安装，安装步骤参考 <a href="https://briian.com/6172/" target="_blank" rel="noopener">https://briian.com/6172/</a></p>
+<h2 id="自定义手势"><a href="#自定义手势" class="headerlink" title="自定义手势"></a>自定义手势</h2><ol>
+<li><p>修改切换左右工作空间的快捷键</p>
+<p> 今天踩了一个小小的坑，发现 <code>key code 124 using {control down}</code> 在我的电脑上不起作用，不懂为啥。后面把快捷键改成不包含 ← 和 → 的就好了。所以，要先修改一下快捷键，尽量避免跟其他键冲突</p>
+<p> System Preferences… -&gt; keyboard -&gt; Shortcuts -&gt; Mission Control</p>
+<ol>
+<li>点击 Move left a space -&gt; 回车 -&gt; 同时按下 control + option + command + [</li>
+<li>点击 Move right a space -&gt; 回车 -&gt; 同时按下 control + option + command + ]</li>
+</ol>
+</li>
+<li><p>自定义 apple script</p>
+<p> 在 ~/.mybash 或者其他文件夹中定义文件 gesture_to_next_space.scpt，并输入下面内容</p>
+<pre><code>tell application &quot;System Events&quot;
+    key code 33 using {option down, control down, command down}
+end tell
+</code></pre><p> 再新建文件 gesture_to_previous_space.scpt，并输入下面内容</p>
+<pre><code>tell application &quot;System Events&quot;
+    key code 33 using {option down, control down, command down}
+end tell
+</code></pre></li>
+</ol>
+<ol start="3">
+<li><p>跳转到 xGestures 设置面板</p>
+<p> System Preferences… -&gt; xGestures -&gt; Applications </p>
+</li>
+<li><p>添加手势</p>
+<p> New Gesture -&gt; 选择手势(比如 Up Right) -&gt; Description 可写可不写 -&gt; Gesture action 选择 Run Apple Script -&gt; 点击 Choose file -&gt; 选择刚刚的文件 gesture_to_next_space.scpt</p>
+<p> 同理设置 Up Left 手势。最后点击 Apply Settings。</p>
+</li>
+<li><p>测试是否成功</p>
+<p> 按住鼠标右键，向上移动鼠标，再向右移动鼠标，松开右键。应该就跳转到右侧工作空间了。</p>
+</li>
+</ol>
+<p>Mac 键盘 KeyCode <a href="https://eastmanreference.com/complete-list-of-applescript-key-codes" target="_blank" rel="noopener">https://eastmanreference.com/complete-list-of-applescript-key-codes</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_wechat_pay.png" alt="Justin Wu WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_alipay.png" alt="Justin Wu Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mac/" rel="tag"># mac</a>
+              <a href="/tags/apple-script/" rel="tag"># apple script</a>
+              <a href="/tags/xGestures/" rel="tag"># xGestures</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/05/06/%E6%A0%91%E8%8E%93%E6%B4%BE3_%E5%AE%89%E8%A3%85_Raspbian_%E9%95%9C%E5%83%8F/" rel="prev" title="树莓派3 安装 Raspbian 镜像">
+      <i class="fa fa-chevron-left"></i> 树莓派3 安装 Raspbian 镜像
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/06/27/%E4%BE%9D%E8%B5%96%E5%8C%85%E4%B8%8D%E6%9B%B4%E6%96%B0%E7%9A%84_bug/" rel="next" title="依赖包不更新的 bug">
+      依赖包不更新的 bug <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8yOTYzOS82MjA3"></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装-xGestures"><span class="nav-number">1.</span> <span class="nav-text">安装 xGestures</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自定义手势"><span class="nav-number">2.</span> <span class="nav-text">自定义手势</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Justin Wu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Justin Wu</p>
+  <div class="site-description" itemprop="description">人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/binwin20" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;binwin20" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Friends
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.longmenwaideyu.com/" title="http:&#x2F;&#x2F;www.longmenwaideyu.com" rel="noopener" target="_blank">龙门外的鱼</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.csdn.net/binwin20" title="http:&#x2F;&#x2F;blog.csdn.net&#x2F;binwin20" rel="noopener" target="_blank">我的 CSDN</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Justin Wu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

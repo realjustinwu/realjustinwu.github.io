@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/apple-touch-icon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.realjustinwu.com').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="最近开始学 NDK 编程，踩了不少的坑。 在 Android Studio 中生成 so 文件又两种方式，一种使用 ndk-build，一种使用 CMake。 使用 ndk-build 可以在 Android.mk 和 Application.mk 文件中，设置编译属性和依赖等。每一次编译项目都需要手动执行 ndk-build 命令才能生成 so 文件，如果经常修改 C 代码，每次都要重新执行命令">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CMake 构建动态库没有生成so文件">
+<meta property="og:url" content="https://www.realjustinwu.com/2017/02/22/CMake-%E6%9E%84%E5%BB%BA%E5%8A%A8%E6%80%81%E5%BA%93%E6%B2%A1%E6%9C%89%E7%94%9F%E6%88%90so%E6%96%87%E4%BB%B6/index.html">
+<meta property="og:site_name" content="Justin Wu&#39;s Blog">
+<meta property="og:description" content="最近开始学 NDK 编程，踩了不少的坑。 在 Android Studio 中生成 so 文件又两种方式，一种使用 ndk-build，一种使用 CMake。 使用 ndk-build 可以在 Android.mk 和 Application.mk 文件中，设置编译属性和依赖等。每一次编译项目都需要手动执行 ndk-build 命令才能生成 so 文件，如果经常修改 C 代码，每次都要重新执行命令">
+<meta property="article:published_time" content="2017-02-22T12:48:57.000Z">
+<meta property="article:modified_time" content="2019-03-07T15:01:19.677Z">
+<meta property="article:author" content="Justin Wu">
+<meta property="article:tag" content="CMake">
+<meta property="article:tag" content="踩坑">
+<meta property="article:tag" content="Sublime">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.realjustinwu.com/2017/02/22/CMake-%E6%9E%84%E5%BB%BA%E5%8A%A8%E6%80%81%E5%BA%93%E6%B2%A1%E6%9C%89%E7%94%9F%E6%88%90so%E6%96%87%E4%BB%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>CMake 构建动态库没有生成so文件 | Justin Wu's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=220467495"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '220467495');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?df85d5b121021219fb61449321f1526b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Justin Wu's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section">Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section">Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section">Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section">Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section">About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www.realjustinwu.com/2017/02/22/CMake-%E6%9E%84%E5%BB%BA%E5%8A%A8%E6%80%81%E5%BA%93%E6%B2%A1%E6%9C%89%E7%94%9F%E6%88%90so%E6%96%87%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Justin Wu">
+      <meta itemprop="description" content="人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Justin Wu's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          CMake 构建动态库没有生成so文件
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2017-02-22 20:48:57" itemprop="dateCreated datePublished" datetime="2017-02-22T20:48:57+08:00">2017-02-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/NDK/" itemprop="url" rel="index">
+                    <span itemprop="name">NDK</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近开始学 NDK 编程，踩了不少的坑。</p>
+<p>在 Android Studio 中生成 so 文件又两种方式，一种使用 ndk-build，一种使用 CMake。</p>
+<p>使用 ndk-build 可以在 Android.mk 和 Application.mk 文件中，设置编译属性和依赖等。<br>每一次编译项目都需要手动执行 <code>ndk-build</code> 命令才能生成 so 文件，如果经常修改 C 代码，每次都要重新执行命令，很麻烦。<br>也可以在 Gradle 中增加 ndk 配置，但是这种方式有缺陷。Android Studio 创建项目时推荐使用第二种方式：使用 CMake。</p>
+<p>CMake 是一个跨平台的自动化建构系统，使用 CMakeLists.txt 来描述构建过程。可以产生标准的构建文件，如 Unix 的 Makefile 或Windows Visual C++ 的 projects/workspaces。</p>
+<p>于是乎开始了 CMake 的踩坑之旅。找了一本 <a href="http://sewm.pku.edu.cn/src/paradise/reference/CMake%20Practice.pdf" target="_blank" rel="noopener">CMake 实践 PDF</a> 开始学习。</p>
+<a id="more"></a>
+<p>在构建动态库时生成不了 so 文件。检查了好几遍，代码和配置跟 PDF 中的一模一样。输出如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MacBook-Pro:build binwin20$ make</span><br><span class="line">Scanning dependencies of target lib</span><br><span class="line">[ 50%] Building C object lib/CMakeFiles/lib.dir/hello.c.o</span><br><span class="line">[100%] Linking C shared library liblib.dylib</span><br><span class="line">[100%] Built target lib</span><br></pre></td></tr></table></figure>
+<p>看到 liblib.dylib 文件，挺奇怪的，为啥不是 so 文件呢？然后 <strong>在 Sublime 的侧边栏中</strong>找了一下没找到 liblib.dylib 文件，猜想这可能是个中间文件。<br>网上各种搜就是找不到答案。最后猜想可能是 Mac 编译的不是 so 文件。于是乎启动 Docker 打开 Ubuntu 系统，把项目文件夹直接挂载到 Ubuntu 中，真是方便。下载 CMake 花了不少时间。<br>执行 make 命令之后，输出如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@3eb73a8c9dcc:/myDocker/cmake/t3/build<span class="comment"># make</span></span><br><span class="line">Scanning dependencies of target lib</span><br><span class="line">[ 50%] Building C object lib/CMakeFiles/lib.dir/hello.c.o</span><br><span class="line">[100%] Linking C shared library liblib.so</span><br><span class="line">[100%] Built target lib</span><br></pre></td></tr></table></figure>
+<p>发现 Ubuntu 中有生成 so 文件，<strong>在 Sublime 的侧边栏中</strong> 还是没看到 so 文件，坑啊。又继续找了好久，没找到原因，然后猜想，会不会生成到其他地方了呢？于是执行了一下 find，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root@3eb73a8c9dcc:/myDocker/cmake/t3/build<span class="comment"># find      </span></span><br><span class="line">.</span><br><span class="line">./cmake_install.cmake</span><br><span class="line">./CMakeCache.txt</span><br><span class="line">...</span><br><span class="line">./lib/CMakeFiles/progress.marks</span><br><span class="line">./lib/liblib.so</span><br><span class="line">./lib/Makefile</span><br><span class="line">./Makefile</span><br></pre></td></tr></table></figure>
+<p>看到了 liblib.so。这人品，简直要爆了，要不是项目名 lib 字母排在 CMakeFiles 后面，指不定还要找多久才能找到这个文件呢。</p>
+<p>然后看看 <strong>Sublime 的侧边栏</strong> 还是没有 so 文件，一脸蒙蔽。难道 Docker 中的文件都还在虚拟机内存中，Mac中看不到？然后在 Mac 中终端里看了一下，有这个文件啊。。。</p>
+<p>最后在 Sublime 中 <code>command + ,</code>，果然找到了原因。要是早点让我看到 liblib.dylib，也不至于被坑这么久啊。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"folder_exclude_patterns"</span>: [<span class="string">".svn"</span>, <span class="string">".git"</span>, <span class="string">".hg"</span>, <span class="string">"CVS"</span>],</span><br><span class="line">    <span class="attr">"file_exclude_patterns"</span>: [<span class="string">"*.pyc"</span>, <span class="string">"*.pyo"</span>, <span class="string">"*.exe"</span>, <span class="string">"*.dll"</span>, <span class="string">"*.obj"</span>,<span class="string">"*.o"</span>, <span class="string">"*.a"</span>, <span class="string">"*.lib"</span>, <span class="string">"*.so"</span>, <span class="string">"*.dylib"</span>, <span class="string">"*.ncb"</span>, <span class="string">"*.sdf"</span>, <span class="string">"*.suo"</span>, <span class="string">"*.pdb"</span>, <span class="string">"*.idb"</span>, <span class="string">".DS_Store"</span>, <span class="string">"*.class"</span>, <span class="string">"*.psd"</span>, <span class="string">"*.db"</span>, <span class="string">"*.sublime-workspace"</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有时间一定要把《程序员的自我修养》看一遍。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_wechat_pay.png" alt="Justin Wu WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_alipay.png" alt="Justin Wu Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CMake/" rel="tag"># CMake</a>
+              <a href="/tags/%E8%B8%A9%E5%9D%91/" rel="tag"># 踩坑</a>
+              <a href="/tags/Sublime/" rel="tag"># Sublime</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/31/Android_%E8%87%AA%E5%AE%9A%E4%B9%89_View%E2%80%94%E2%80%94%E6%99%BA%E8%83%BD%E5%BA%8A%E5%9E%AB/" rel="prev" title="Android 自定义View——智能床垫">
+      <i class="fa fa-chevron-left"></i> Android 自定义View——智能床垫
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/02/24/%E6%90%AD%E5%BB%BA-Android-Framework-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%8E%AF%E5%A2%83/" rel="next" title="搭建 Android Framework 源码阅读环境">
+      搭建 Android Framework 源码阅读环境 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8yOTYzOS82MjA3"></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Justin Wu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Justin Wu</p>
+  <div class="site-description" itemprop="description">人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/binwin20" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;binwin20" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Friends
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.longmenwaideyu.com/" title="http:&#x2F;&#x2F;www.longmenwaideyu.com" rel="noopener" target="_blank">龙门外的鱼</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.csdn.net/binwin20" title="http:&#x2F;&#x2F;blog.csdn.net&#x2F;binwin20" rel="noopener" target="_blank">我的 CSDN</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Justin Wu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

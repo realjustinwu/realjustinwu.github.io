@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/apple-touch-icon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.realjustinwu.com').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="一直都使用 DropBox 保存笔记，搭建博客的时候也想着要把重要的东西放到 DropBox 中。于是把 项目中 _config.yml 的 source_dir 指向到 DropBox 的文件夹中。写第一篇博客没发现问题，写第二篇博客也没发现问题。因为没有使用图片，写第三篇博客 [ActiveAndroid 源码学习][] 的时候需要用到图片，但是图片不显示。。。开始了 debug 之路。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo 图片上传踩坑">
+<meta property="og:url" content="https://www.realjustinwu.com/2016/08/27/Hexo-%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E8%B8%A9%E5%9D%91/index.html">
+<meta property="og:site_name" content="Justin Wu&#39;s Blog">
+<meta property="og:description" content="一直都使用 DropBox 保存笔记，搭建博客的时候也想着要把重要的东西放到 DropBox 中。于是把 项目中 _config.yml 的 source_dir 指向到 DropBox 的文件夹中。写第一篇博客没发现问题，写第二篇博客也没发现问题。因为没有使用图片，写第三篇博客 [ActiveAndroid 源码学习][] 的时候需要用到图片，但是图片不显示。。。开始了 debug 之路。">
+<meta property="og:image" content="https://www.realjustinwu.com/images/testimage.gif">
+<meta property="article:published_time" content="2016-08-27T16:05:27.000Z">
+<meta property="article:modified_time" content="2019-03-07T15:01:19.840Z">
+<meta property="article:author" content="Justin Wu">
+<meta property="article:tag" content="Hexo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.realjustinwu.com/images/testimage.gif">
+
+<link rel="canonical" href="https://www.realjustinwu.com/2016/08/27/Hexo-%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E8%B8%A9%E5%9D%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Hexo 图片上传踩坑 | Justin Wu's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=220467495"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '220467495');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?df85d5b121021219fb61449321f1526b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Justin Wu's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section">Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section">Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section">Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section">Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section">About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www.realjustinwu.com/2016/08/27/Hexo-%E5%9B%BE%E7%89%87%E4%B8%8A%E4%BC%A0%E8%B8%A9%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Justin Wu">
+      <meta itemprop="description" content="人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Justin Wu's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Hexo 图片上传踩坑
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-08-28 00:05:27" itemprop="dateCreated datePublished" datetime="2016-08-28T00:05:27+08:00">2016-08-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index">
+                    <span itemprop="name">其他</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>一直都使用 DropBox 保存笔记，搭建博客的时候也想着要把重要的东西放到 DropBox 中。于是把 项目中 _config.yml 的 source_dir 指向到 DropBox 的文件夹中。写第一篇博客没发现问题，写第二篇博客也没发现问题。因为没有使用图片，写第三篇博客 [ActiveAndroid 源码学习][] 的时候需要用到图片，但是图片不显示。。。开始了 debug 之路。</p>
+<a id="more"></a>
+<p>于是找谷歌，大概有两种方式：一种是使用第三方图床，另一种是使用本地保存。于是尝试使用七牛图床，我的图片都放在一个文件夹中的，直接把这个文件夹同步到七牛，一个脚本处理所有的图片链接，简直太方便了。于是开通七牛，实名认证，域名绑定的时候，要求域名备案，域名备案，备案。。。</p>
+<p>然后看到 <a href="https://codefalling.com/2015/12/19/no-pains-with-hexo-local-image/" target="_blank" rel="noopener">在 hexo 中优雅的使用本地图片</a> 这篇博客，这里介绍了两种放图片的方式，一种放在根目录（我要的就是这种），另一种是建立一个跟文件名相同名称的目录，然后使用相对路径就能访问。两种都试过了，都没有效果。打开 public 文件夹，在 images 目录下和文章同级目录下都没有找到图片文件。为啥别人能用自己用不了呢？</p>
+<p>首先想到的是，是不是所有的图片都有问题，打开 public/images 目录，发现其中有一些图片包括 gif, jpg, svg 格式的。然后找找这些图片的来源，都是从 <a href="https://github.com/iissnan/hexo-theme-next" target="_blank" rel="noopener">Next</a> 主题中复制来的。把自己的图片放这个主题中，显然是可以的，但是跟主题混在一起，以后更改主题图片就又出问题了，这种处理方式显然不对。。再找找有没有其他的没被 Hexo 处理的文件。只有 vendors 这个文件夹是没有被处理的，但是这个文件夹也是从主题复制来的。忽略。。</p>
+<p>谷歌啥图片没有拷贝到 public 目录中，无解。只能自己尝试了。</p>
+<p>首先做的是把 source_dir 改回初始化的值 <code>source</code>，并且在 source/, source/_post/, source/images 文件夹下都放不同的图片。运行 <code>hexo g</code>, 查看 public 目录，发现 source/, source/images 目录下的文件都能复制到 public 中。为啥在 DropBox 中的一个都不能复制呢？难道是权限问题？</p>
+<p>于是 <code>ls -al</code>, 结果如下：<br>Hexo 中的文件和文件夹</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x   3 binwin20  staff   102  8 27 16:21 images</span><br><span class="line">-rw-r--r--@ 1 binwin20  staff  54092  8 27 10:58 6F869754-243C-47A9-B9A4-A2031948D20A.png</span><br></pre></td></tr></table></figure>
+<p>DropBox 中的文件和文件夹</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x@  4 binwin20  staff    136  8 27 11:47 images</span><br><span class="line">-rw-r--r--@  1 binwin20  staff  54092  8 27 10:58 6F869754-243C-47A9-B9A4-A2031948D20A.png</span><br></pre></td></tr></table></figure>
+<p>文件夹多了一个 <code>@</code>，<code>@</code> 是啥呢。谷歌一下：它包含了文件的扩展属性。还是不明白，管他呢，把 DropBox 中的复制到 Hexo 中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x@  4 binwin20  staff   136  8 27 11:47 images</span><br></pre></td></tr></table></figure>
+<p>Hexo 中的图片还是能生到public 中，显然不是 <code>@</code> 和权限导致的问题。</p>
+<p>于是尝试把 source 放在上一层目录中（跟 Hexo 项目同级）。运行 <code>hexo clean</code>, <code>hexo g</code>，图片不能复制。。。</p>
+<p>然后尝试把路径改成绝对路径，source 名称改成 source1，都试了一下。发现只有 source 在 Hexo 文件夹下才能把其中的图片复制到 public 文件夹下。</p>
+<p>猜想应该是 source_dir 的问题。于是全局查找 source_dir。</p>
+<p>load_config.js 中：  <code>ctx.source_dir = pathFn.resolve(baseDir, config.source_dir) + sep;</code> 没有具体的使用，名称依旧是 source_dir，忽略，继续查找</p>
+<p>/hexo/lib/hexo/post.js 中:  <code>var draftDir = pathFn.join(ctx.source_dir, &#39;_drafts&#39;);</code> 在这里定义了 draftDir，肯定有使用。但是 draft 是草稿的意思。直接忽略，还不如看 post 呢。</p>
+<p>source.js 几行代码，可惜都看不懂。</p>
+<p>跟 source_dir 有关的代码都看了一下，然并软。看不懂 js 代码，不知道执行流程。然后想到 hexo 有一个 <code>--debug</code> 模式，于是执行 <code>hexo clean</code>, <code>hexo g --debug</code>,</p>
+<p>当 source_dir 指向 DropBox 中时</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">Loading database.</span><br><span class="line">01:34:17.750 INFO  Start processing</span><br><span class="line">01:34:17.787 DEBUG Processed: favicon.ico</span><br><span class="line">01:34:17.820 DEBUG Processed: images/6F869754-243C-47A9-B9A4-A2031948D20A.png</span><br><span class="line">01:34:17.880 DEBUG Theme config loaded.</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>当 source_dir 指向 Hexo 中时</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">Loading database.</span><br><span class="line">01:34:17.750 INFO  Start processing</span><br><span class="line">01:34:17.787 DEBUG Processed: favicon.ico</span><br><span class="line">01:34:17.820 DEBUG Processed: images/6F869754-243C-47A9-B9A4-A2031948D20A.png</span><br><span class="line">01:34:17.880 DEBUG Theme config loaded.</span><br><span class="line">...</span><br><span class="line">01:34:20.621 INFO  Generated: about/index.html</span><br><span class="line">01:34:20.625 INFO  Generated: images/6F869754-243C-47A9-B9A4-A2031948D20A.png</span><br><span class="line">01:34:20.625 INFO  Generated: images/avatar.jpg</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>于是全局查找 <code>Start processing</code> 和 <code>Processed:</code>，还是看不懂 js 代码。</p>
+<p>再次谷歌 <code>hexo source_dir</code> 搜到 github 中别人提的一个 <a href="https://github.com/hexojs/hexo/issues/1666" target="_blank" rel="noopener">issue</a>，没有人回答。再看看提 Issue 的人<a href="https://github.com/yyx990803" target="_blank" rel="noopener">Evan You</a> <strong>Creator of @vuejs, previously @meteor &amp; @google</strong>，哇！Vuejs！我们现在外包给别人做的 H5 页面就是使用 Vuejs 做的。</p>
+<p>不能把 source_dir 指向的其他的文件夹，定义这个 source_dir 有软用。不懂 js 😪</p>
+<p>在这里死扣也不是办法，于是谷歌 DropBox 同步多文件夹，还真有 <a href="http://www.linuxidc.com/Linux/2011-05/35373.htm" target="_blank" rel="noopener">链接</a></p>
+<p>以后有时间学学 Js 和 ReactNative。</p>
+<p>测试一下上传图片：</p>
+<img src="/images/testimage.gif">
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_wechat_pay.png" alt="Justin Wu WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_alipay.png" alt="Justin Wu Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/27/ActiveAndroid-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/" rel="prev" title="ActiveAndroid 源码学习">
+      <i class="fa fa-chevron-left"></i> ActiveAndroid 源码学习
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/08/31/Android_%E8%87%AA%E5%AE%9A%E4%B9%89_View%E2%80%94%E2%80%94%E6%99%BA%E8%83%BD%E5%BA%8A%E5%9E%AB/" rel="next" title="Android 自定义View——智能床垫">
+      Android 自定义View——智能床垫 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8yOTYzOS82MjA3"></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Justin Wu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Justin Wu</p>
+  <div class="site-description" itemprop="description">人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/binwin20" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;binwin20" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Friends
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.longmenwaideyu.com/" title="http:&#x2F;&#x2F;www.longmenwaideyu.com" rel="noopener" target="_blank">龙门外的鱼</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.csdn.net/binwin20" title="http:&#x2F;&#x2F;blog.csdn.net&#x2F;binwin20" rel="noopener" target="_blank">我的 CSDN</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Justin Wu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

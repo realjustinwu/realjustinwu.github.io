@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/apple-touch-icon.png" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://www.realjustinwu.com').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="在分析 Accessibility Service 源码之前，我们先看一下 Accessibility Service 是如何创建的，为后续继续分析源码做准备。参考文档  Android 系统给我们提供了标准的 accessibility 服务，如 Talkback 和 Select to Speak。一些 APP 也为我们提供了 Accessibility 功能，如 绿色保护、MacroDro">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Accessibility (2) —— 创建自己的 Accessibility Service">
+<meta property="og:url" content="https://www.realjustinwu.com/2018/10/07/%E5%BB%BA%E7%AB%8B%E8%87%AA%E5%B7%B1%E7%9A%84_Accessibility_Service/index.html">
+<meta property="og:site_name" content="Justin Wu&#39;s Blog">
+<meta property="og:description" content="在分析 Accessibility Service 源码之前，我们先看一下 Accessibility Service 是如何创建的，为后续继续分析源码做准备。参考文档  Android 系统给我们提供了标准的 accessibility 服务，如 Talkback 和 Select to Speak。一些 APP 也为我们提供了 Accessibility 功能，如 绿色保护、MacroDro">
+<meta property="article:published_time" content="2018-10-07T12:27:00.000Z">
+<meta property="article:modified_time" content="2019-03-07T15:01:19.735Z">
+<meta property="article:author" content="Justin Wu">
+<meta property="article:tag" content="辅助">
+<meta property="article:tag" content="Accessibility">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://www.realjustinwu.com/2018/10/07/%E5%BB%BA%E7%AB%8B%E8%87%AA%E5%B7%B1%E7%9A%84_Accessibility_Service/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Android Accessibility (2) —— 创建自己的 Accessibility Service | Justin Wu's Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=220467495"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '220467495');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?df85d5b121021219fb61449321f1526b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Justin Wu's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section">Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section">Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section">Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section">Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section">About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www.realjustinwu.com/2018/10/07/%E5%BB%BA%E7%AB%8B%E8%87%AA%E5%B7%B1%E7%9A%84_Accessibility_Service/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Justin Wu">
+      <meta itemprop="description" content="人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Justin Wu's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Android Accessibility (2) —— 创建自己的 Accessibility Service
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-10-07 20:27:00" itemprop="dateCreated datePublished" datetime="2018-10-07T20:27:00+08:00">2018-10-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>在分析 Accessibility Service 源码之前，我们先看一下 Accessibility Service 是如何创建的，为后续继续分析源码做准备。<a href="https://developer.android.com/guide/topics/ui/accessibility/services" target="_blank" rel="noopener">参考文档</a></p>
+</blockquote>
+<p>Android 系统给我们提供了标准的 accessibility 服务，如 Talkback 和 Select to Speak。一些 APP 也为我们提供了 Accessibility 功能，如 绿色保护、MacroDroid、Tasker、Vysor 等，当然我们也可以自定义我们自己的服务。</p>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><ol>
+<li><p>声明 Accessibility 服务</p>
+ <a id="more"></a>
+<p> 声明一个 Service 并添加到 Manifest 文件中，需要权限和 filter</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">".MyAccessibilityService"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:permission</span>=<span class="string">"android.permission.BIND_ACCESSIBILITY_SERVICE"</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">"android.accessibilityservice.AccessibilityService"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 设置 configuration --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">"android:accessibilityservice"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:resource</span>=<span class="string">"@xml/accessibility"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>添加 accessibility 配置文件</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">accessibility-service</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:description</span>=<span class="string">"@string/accessibility_service_description"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:packageNames</span>=<span class="string">"com.example.android.apis"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityEventTypes</span>=<span class="string">"typeAllMask"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFlags</span>=<span class="string">"flagDefault"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFeedbackType</span>=<span class="string">"feedbackSpoken"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:notificationTimeout</span>=<span class="string">"100"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:canRetrieveWindowContent</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:settingsActivity</span>=<span class="string">"com.example.android.accessibility.ServiceSettingsActivity"</span></span></span><br><span class="line"><span class="tag">/&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>参数说明</p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>字段说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>android:packageNames</td>
+<td>关注哪些应用发出的事件，多个应用包名之间用逗号分隔，如果不填，则关注手机上所有应用发出的事件</td>
+</tr>
+<tr>
+<td>android:accessibilityEventType</td>
+<td>关注的事件类型，TYPE_VIEW_FOCUSED，TYPE_WINDOW_STATE_CHANGED，TYPE_NOTIFICATION_STATE_CHANGED 等</td>
+</tr>
+<tr>
+<td>android:accessibilityFlags</td>
+<td>辅助服务额外的flag信息。例如FLAG_REPORT_VIEW_IDS可以使回调的事件带上view的ID</td>
+</tr>
+<tr>
+<td>android:accessibilityFeedbackType</td>
+<td>事件的反馈类型，例如声音反馈、触觉反馈、视觉反馈等。</td>
+</tr>
+<tr>
+<td>android:notificationTimeout</td>
+<td>两个同样类型的辅助事件发给辅助服务的最小时间间隔</td>
+</tr>
+<tr>
+<td>android:canRetrieveWindowContent</td>
+<td>是否可以获取窗口内容</td>
+</tr>
+<tr>
+<td>android:description</td>
+<td>打开 Accessibility 之后的描述信息</td>
+</tr>
+<tr>
+<td>android:settingsActivity</td>
+<td>打开 Accessibility 之后，点击 Settings 跳转的 Activity</td>
+</tr>
+</tbody>
+</table>
+<h2 id="实现-AccessibilityService"><a href="#实现-AccessibilityService" class="headerlink" title="实现 AccessibilityService"></a>实现 AccessibilityService</h2><ol>
+<li><p>需要重写 AccessibilityService 的方法</p>
+<ol>
+<li>onServiceConnected() 可选。系统启动这个 Service 的时候，可以在这里调用setServiceInfo()进行配置AccessibilityServiceInfo</li>
+<li>onAccessibilityEvent() 必选。接收系统发来的 AccessibilityEvent</li>
+<li>onInterrupt() 必选。系统想要中断 AccessibilityService 返给的响应时会调用。在整个生命周期里会被调用多次。</li>
+<li>onUnbind() 可选。系统关闭这个 Service 的时候，做一些释放工作</li>
+</ol>
+</li>
+<li><p>过滤 Accessibility 事件</p>
+<ol>
+<li><p>过滤需要的事件，可以通过两种方式</p>
+<ul>
+<li>包名: 通过 android:packageNames 中定义</li>
+<li>事件类型: 通过 android:accessibilityEventTypes 设置</li>
+</ul>
+</li>
+<li><p>注意： 系统会把 accessibility 事件发送给多个 Service，如果他们的 feedback Types 不一样，如果是一样的，会发送给先注册的那个</p>
+</li>
+</ol>
+</li>
+<li><p>设置音量</p>
+ <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> mAudioManager = getSystemService(AUDIO_SERVICE) <span class="keyword">as</span> AudioManager</span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onAccessibilityEvent</span><span class="params">(accessibilityEvent: <span class="type">AccessibilityEvent</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (accessibilityEvent.source.text == <span class="string">"Increase volume"</span>) &#123;</span><br><span class="line">        mAudioManager.adjustStreamVolume(AudioManager.STREAM_ACCESSIBILITY, ADJUST_RAISE, <span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 Accessibility 按钮(在 Navigation Bar 右侧, Android 8.0)</p>
+<p> 可以在 Service 启动的时候，检查并监听这个按钮。可以查看 Select to Speck 这个 Accessibility Service</p>
+ <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onServiceConnected</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (accessibilityButtonController?.isAccessibilityButtonAvailable) &#123; <span class="comment">// 需要判断能否注册这个 button</span></span><br><span class="line">        registerAccessibilityButton();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Can't register</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">registerAccessibilityButton</span><span class="params">()</span></span> &#123;</span><br><span class="line">    accessibilityButtonController?.registerAccessibilityButtonCallback(</span><br><span class="line">        <span class="keyword">object</span>: AccessibilityButtonCallback() &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onClicked</span><span class="params">(controller: <span class="type">accessibilityButtonController</span>)</span></span> &#123;</span><br><span class="line">                <span class="comment">// 被点击了</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onAvailablityChanged</span><span class="params">(controller: <span class="type">accessibilityButtonController</span>, available: <span class="type">Boolean</span>)</span></span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (controller == accessibilityButtonController) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="literal">null</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>获取指纹识别手势</p>
+<p> 如果要使用这个功能，应该提供给用户开关控制这个功能。如果多个 Accessibility Service 都使用指纹手势功能，可能导致冲突。</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">accessibility-service</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag"><span class="attr">...</span></span></span><br><span class="line"><span class="tag"><span class="attr">android:accessibilityFlags</span>=<span class="string">" ... |flagRequestFingerprintGestures"</span></span></span><br><span class="line"><span class="tag"><span class="attr">android:canRequestFingerprintGestures</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag"><span class="attr">...</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+ <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mGestureController = fingerprintGestureController</span><br><span class="line">    mIsGestureDetectionAvailable = mGestureController?.isGestureDetectionAvailable ?: <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onServiceConnected</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (mFingerprintGestureCallback != <span class="literal">null</span> || !mIsGestureDetectionAvailable) <span class="keyword">return</span></span><br><span class="line">    mFingerprintGestureCallback =</span><br><span class="line">            <span class="keyword">object</span> : FingerprintGestureController.FingerprintGestureCallback() &#123;</span><br><span class="line">                <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onGestureDetected</span><span class="params">(gesture: <span class="type">Int</span>)</span></span> &#123;</span><br><span class="line">                    <span class="keyword">when</span> (gesture) &#123;</span><br><span class="line">                        FINGERPRINT_GESTURE_SWIPE_DOWN -&gt; moveGameCursorDown()</span><br><span class="line">                        FINGERPRINT_GESTURE_SWIPE_LEFT -&gt; moveGameCursorLeft()</span><br><span class="line">                        FINGERPRINT_GESTURE_SWIPE_RIGHT -&gt; moveGameCursorRight()</span><br><span class="line">                        FINGERPRINT_GESTURE_SWIPE_UP -&gt; moveGameCursorUp()</span><br><span class="line">                        <span class="keyword">else</span> -&gt; Log.e(MY_APP_TAG, <span class="string">"Error: Unknown gesture type detected!"</span>)</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onGestureDetectionAvailabilityChanged</span><span class="params">(available: <span class="type">Boolean</span>)</span></span> &#123;</span><br><span class="line">                    mIsGestureDetectionAvailable = available</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">    mFingerprintGestureCallback?.also &#123;</span><br><span class="line">        mGestureController?.registerFingerprintGestureCallback(it, <span class="literal">null</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>多国语言的支持</p>
+</li>
+<li><p>监听手势(Android 4.1)</p>
+<p> 设置 <code>serviceInfo.flags = AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORTATION_MODE</code></p>
+</li>
+<li><p>执行手势操作</p>
+<p> 右滑然后下滑</p>
+ <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">doRightThenDownDrag</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> dragRightPath = Path().apply &#123; moveTo(<span class="number">200</span>, <span class="number">200</span>) lineTo(<span class="number">400</span>, <span class="number">200</span>) &#125;</span><br><span class="line">    <span class="keyword">val</span> rightDuration = <span class="number">500</span>L</span><br><span class="line">    <span class="keyword">val</span> dragDownPath = Path().apply &#123; moveTo(<span class="number">400</span>, <span class="number">200</span>) lineTo(<span class="number">400</span>, <span class="number">400</span>) &#125;</span><br><span class="line">    <span class="keyword">val</span> downtDuration = <span class="number">500</span>L</span><br><span class="line">    <span class="keyword">val</span> rightThenDownDrag = GestureDexcription.StrokeDescription(dragRightPath, <span class="number">0</span>L, rightDuration, <span class="literal">true</span>).apply &#123;</span><br><span class="line">        continueStroke(dragDownPath, rightDuration, downtDuration, <span class="literal">false</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 Accessibility 动作(Android 4.1)</p>
+<p> 使用  performAction() 执行特殊动作。</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">override fun onAccessibilityEvent(event: AccessibilityEvent) &#123;</span><br><span class="line">    event.source?.apply &#123;</span><br><span class="line">        // 使用 event 和 层级信息 source 决定执行啥动作</span><br><span class="line">        performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)</span><br><span class="line">        // 也可以使用 performGlobalAction() 执行全局操作，如跳转到首页</span><br><span class="line">        recycle()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="其他方法"><a href="#其他方法" class="headerlink" title="其他方法"></a>其他方法</h3><ol>
+<li><p>使用焦点</p>
+<p> Accessibility 焦点跟输入焦点是不一样的。Accessibility 焦点是为了让 Accessibility 能能够使用非选中的点。使用 <code>AccessibilityNodeInfo.findFocus()</code> 或者 <code>focusSearch()</code> 查找元素，然后使用 <code>perfomAction(ACTION_SET_ACCESSIBILITY_FOCUS)</code> 获取焦点</p>
+</li>
+<li><p>获取布局文件</p>
+<p> 使用 <code>AccessibilityEvent.getSource()</code> 获取布局层级，需要设置 <code>canRetrieveWindowContent = true</code></p>
+</li>
+<li><p>获取焦点文件</p>
+<p> 使用 <code>AccessibilityNodeInfo.getChild()</code> 和 <code>getParent()</code> 获取焦点元素</p>
+</li>
+<li><p>获取 Hint Text</p>
+<p> <code>getHintText()</code> 即使 hint 没有显示也能获取到</p>
+</li>
+<li><p>获取元素的位置</p>
+<p> 使用 refreshWithExtraData(EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY, resultBundle)</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_wechat_pay.png" alt="Justin Wu WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/my_alipay.png" alt="Justin Wu Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BE%85%E5%8A%A9/" rel="tag"># 辅助</a>
+              <a href="/tags/Accessibility/" rel="tag"># Accessibility</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/09/28/wordpress%E9%9C%80%E8%A6%81%E8%AE%BF%E9%97%AE%E6%82%A8%E7%BD%91%E9%A1%B5%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E6%9D%83%E9%99%90/" rel="prev" title="wordpress需要访问您网页服务器的权限">
+      <i class="fa fa-chevron-left"></i> wordpress需要访问您网页服务器的权限
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/22/Talkback_%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="next" title="Android Accessibility (3) —— Talkback 源码解析">
+      Android Accessibility (3) —— Talkback 源码解析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8yOTYzOS82MjA3"></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现-AccessibilityService"><span class="nav-number">2.</span> <span class="nav-text">实现 AccessibilityService</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#其他方法"><span class="nav-number">2.1.</span> <span class="nav-text">其他方法</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Justin Wu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Justin Wu</p>
+  <div class="site-description" itemprop="description">人一能之，己百之；人十能之，己千之。虽愚必明，虽柔必强。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/binwin20" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;binwin20" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Friends
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.longmenwaideyu.com/" title="http:&#x2F;&#x2F;www.longmenwaideyu.com" rel="noopener" target="_blank">龙门外的鱼</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.csdn.net/binwin20" title="http:&#x2F;&#x2F;blog.csdn.net&#x2F;binwin20" rel="noopener" target="_blank">我的 CSDN</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Justin Wu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
